@@ -1,0 +1,6 @@
+/mongodbcrudenv/Scripts
+/mongodbcrudenv/Lib
+/mongodbcrudenv/Include
+.idea
+__pycache__
+../.idea

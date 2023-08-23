@@ -1,0 +1,15 @@
+.auth__form {
+  width: 90%;
+  margin: auto;
+}
+
+.auth__mode-control {
+  text-align: center;
+  margin: 1rem;
+}
+
+@media (min-width: 768px) {
+  .auth__form {
+    width: 40rem;
+  }
+}

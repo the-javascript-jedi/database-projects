@@ -1,0 +1,19 @@
+.input {
+  width: 100%;
+  margin: 0.5rem 0;
+}
+
+.input input,
+.input textarea {
+  font: inherit;
+  width: 100%;
+  border: 1px solid #ccc;
+  padding: 0.25rem 0.5rem;
+  background: white;
+}
+
+.input input:focus,
+.input textarea:focus {
+  border-color: #6200ff;
+  outline: none;
+}

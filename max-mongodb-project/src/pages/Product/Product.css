@@ -1,0 +1,11 @@
+.product-page {
+    text-align: center;
+}
+
+.product-page__image {
+    width: 25rem;
+    height: 25rem;
+    background-position: center;
+    background-size: cover;
+    margin: auto;
+}

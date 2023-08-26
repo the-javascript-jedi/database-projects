@@ -3,7 +3,7 @@ const path = require("path");
 const express = require("express");
 const bodyParser = require("body-parser");
 // mongoclient
-const mongodb = require("mongodb").MongoClient;
+// const mongodb = require("mongodb").MongoClient;
 const productRoutes = require("./routes/products");
 const authRoutes = require("./routes/auth");
 
@@ -26,15 +26,15 @@ app.use((req, res, next) => {
 app.use("/products", productRoutes);
 app.use("/", authRoutes);
 // connect to devConnector cluster with shop db
-mongodb
-  .connect(
-    "mongodb+srv://webdev-mongodb:webdev-mongodb@devconnector.ahxye.mongodb.net/shop?retryWrites=true"
-  )
-  .then((client) => {
-    console.log("Connected");
-    client.close();
-  })
-  .catch((err) => {
-    console.log("err", err);
-  });
+// mongodb
+//   .connect(
+//     "mongodb+srv://webdev-mongodb:webdev-mongodb@devconnector.ahxye.mongodb.net/shop?retryWrites=true"
+//   )
+//   .then((client) => {
+//     console.log("Connected");
+//     client.close();
+//   })
+//   .catch((err) => {
+//     console.log("err", err);
+//   });
 app.listen(3100);

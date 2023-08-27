@@ -59,16 +59,48 @@ const products = [
 router.get("/", (req, res, next) => {
   // Return a list of dummy products
   // Later, this data will be fetched from MongoDB
-  const queryPage = req.query.page;
-  const pageSize = 5;
-  let resultProducts = [...products];
-  if (queryPage) {
-    resultProducts = products.slice(
-      (queryPage - 1) * pageSize,
-      queryPage * pageSize
-    );
-  }
-  res.json(resultProducts);
+  // const queryPage = req.query.page;
+  // const pageSize = 5;
+  // let resultProducts = [...products];
+  // if (queryPage) {
+  //   resultProducts = products.slice(
+  //     (queryPage - 1) * pageSize,
+  //     queryPage * pageSize
+  //   );
+  // }
+  // Mongo client for db connection
+  MongoClient.connect(
+    "mongodb+srv://webdev-mongodb:webdev-mongodb@devconnector.ahxye.mongodb.net/shop?retryWrites=true"
+  )
+    .then((client) => {
+      const products = [];
+      console.log("Connected");
+      client
+        .db()
+        .collection("products")
+        // find returns cursor which we need to loop over
+        .find()
+        .forEach((productDoc) => {
+          // console.log("productDoc", productDoc);
+          productDoc.price = productDoc.price.toString();
+          products.push(productDoc);
+        })
+        .then((result) => {
+          console.log("result", result);
+          // close the connection
+          client.close();
+          res.status(200).json(products);
+        })
+        .catch((err) => {
+          console.log("insertOne err", err);
+          res.status(500).json({ message: "An error occured" });
+        });
+    })
+    .catch((err) => {
+      console.log("err", err);
+      res.status(500).json({ message: err });
+    });
+  // res.json(resultProducts);
 });
 
 // Get single product
@@ -88,6 +120,7 @@ router.post("", (req, res, next) => {
     image: req.body.image,
   };
   console.log(newProduct);
+  // Mongo client for db connection
   MongoClient.connect(
     "mongodb+srv://webdev-mongodb:webdev-mongodb@devconnector.ahxye.mongodb.net/shop?retryWrites=true"
   )

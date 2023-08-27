@@ -135,8 +135,23 @@ router.patch("/:id", (req, res, next) => {
     price: parseFloat(req.body.price), // store this as 128bit decimal in MongoDB
     image: req.body.image,
   };
-  console.log(updatedProduct);
-  res.status(200).json({ message: "Product updated", productId: "DUMMY" });
+  db.getDb()
+    .collection("products")
+    .updateOne(
+      { _id: new ObjectId(req.params.id) },
+      {
+        $set: updatedProduct,
+      }
+    )
+    .then((result) => {
+      res
+        .status(200)
+        .json({ message: "Product updated", productId: req.params.id });
+    })
+    .catch((err) => {
+      console.log("insertOne err", err);
+      res.status(500).json({ message: "An error occured" });
+    });
 });
 
 // Delete a product

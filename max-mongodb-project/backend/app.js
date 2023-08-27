@@ -4,6 +4,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 // mongoclient
 // const mongodb = require("mongodb").MongoClient;
+const db = require("./db");
 const productRoutes = require("./routes/products");
 const authRoutes = require("./routes/auth");
 
@@ -37,4 +38,11 @@ app.use("/", authRoutes);
 //   .catch((err) => {
 //     console.log("err", err);
 //   });
-app.listen(3100);
+// if db is initialized run the server on port
+db.initDb((err, db) => {
+  if (err) {
+    console.log("err", err);
+  } else {
+    app.listen(3100);
+  }
+});

@@ -1,0 +1,842 @@
+// upload the products-bulk.json manually in kibana web browser
+// get all data
+GET /products/_search
+{
+  "query": {
+    "match_all":{}
+  }
+}
+
+//search term query
+// text search is case sensitive in term query -- shorthand
+GET /products/_search
+{
+  "query": {
+    "term":{
+      "tags":"Vegetable"
+    }
+  }
+}
+
+// text search is case sensitive in term query --explicit
+// but in new versions of elastic api we can use exlicit version with case_insensitive flag
+GET /products/_search
+{
+  "query": {
+    "term":{
+      "tags":{
+        "value":"vegetable",
+        "case_insensitive":true
+      }
+    }
+  }
+}
+
+//boolean search
+GET /products/_search
+{
+  "query": {
+    "term":{
+      "is_active":true
+    }
+  }
+}
+
+//number search
+GET /products/_search
+{
+  "query": {
+    "term":{
+      "in_stock":1
+    }
+  }
+}
+
+//timestamps
+GET /products/_search
+{
+  "query": {
+    "term":{
+      "created":"2010/07/10"
+    }
+  }
+}
+
+// search multiple tags
+// this will below seach tags in an or condition
+// returning items with (soup || meat )
+// when we provide array of values we need to specify
+// terms instead of term
+GET /products/_search
+{
+  "query": {
+    "terms":{
+      "tags":["Soup","meat"]
+    }
+  }
+}
+
+//Retrieving documents by IDs
+GET /products/_search
+{
+  "query": {
+    "ids":{
+      "values":["gf5mPI0BZa5H72dXPYNo","g_5mPI0BZa5H72dXPYNo","hf5mPI0BZa5H72dXPYNo"]
+    }
+  }
+}
+//Basic usage
+//Range search
+GET /products/_search
+{
+  "query": {
+    "range": {
+      "in_stock": {
+        "gte": 2,
+        "lte": 5
+      }
+    }
+  }
+}
+
+GET /products/_search
+{
+  "query": {
+    "range": {
+      "in_stock": {
+        "gt": 1,
+        "lt": 5
+      }
+    }
+  }
+}
+
+//Querying dates
+GET /products/_search
+{
+  "query": {
+    "range": {
+      "created": {
+        "gte": "2015/01/01",
+        "lte": "2015/01/31"
+      }
+    }
+  }
+}
+
+//Specifying the time
+GET /products/_search
+{
+  "query": {
+    "range": {
+      "created": {
+        "gte": "2015/01/01 00:00:00",
+        "lte": "2015/01/31 23:59:59"
+      }
+    }
+  }
+}
+
+//Specifying a UTC offset
+GET /products/_search
+{
+  "query": {
+    "range": {
+      "created": {
+        "time_zone": "+01:00",
+        "gte": "2020/01/01 01:00:00",
+        "lte": "2020/02/01 00:59:59"
+      }
+    }
+  }
+}
+//Specifying a date format
+GET /products/_search
+{
+  "query": {
+    "range": {
+      "created": {
+        "format": "dd/MM/yyyy",
+        "gte": "01/01/2020",
+        "lte": "31/01/2020"
+      }
+    }
+  }
+}
+//wildcard
+GET /products/_search
+{
+  "query": {
+    "prefix": {
+      "name": {
+        "value": "Wine",
+        "case_insensitive":true
+      }
+    }
+  }
+}
+
+//Single character wildcard (?)
+GET /products/_search
+{
+  "query": {
+    "wildcard": {
+      "tags": {
+        "value": "Past?"
+      }
+    }
+  }
+}
+
+//Zero or more characters wildcard (*)
+GET /products/_search
+{
+  "query": {
+    "wildcard": {
+      "tags": {
+        "value": "Bee*"
+      }
+    }
+  }
+}
+
+//Regexp
+GET /products/_search
+{
+  "query": {
+    "regexp": {
+      "tags": {
+        "value": "Bee(f|r)+"
+      }
+    }
+  }
+}
+
+//Case insensitive searches
+//All of the above queries can be made case insensitive by adding the case_insensitive parameter, e.g.:
+
+GET /products/_search
+{
+  "query": {
+    "prefix": {
+      "name": {
+        "value": "Past",
+        "case_insensitive": true
+      }
+    }
+  }
+}
+
+//Querying by field existence
+GET /products/_search
+{
+  "query": {
+    "exists": {
+      "field": "tags"
+    }
+  }
+}
+
+//Inverting the query
+//There is no dedicated query for this, so we do it with the bool query.
+
+GET /products/_search
+{
+  "query": {
+    "bool": {
+      "must_not": [
+        {
+          "exists": {
+            "field": "tags"
+          }
+        }
+      ]
+    }
+  }
+}
+
+GET /products/_search
+{
+  "query": {
+    "wildcard": {
+      "tags": {
+        "value": "Past?"
+      }
+    }
+  }
+}
+
+//full text query -- match
+GET /products/_search
+{
+  "query": {
+    "match": {
+      "name": "PaStA"
+    }
+  }
+}
+
+//Searching for multiple terms
+GET /products/_search
+{
+  "query": {
+    "match": {
+      "name": "PASTA CHICKEN"
+    }
+  }
+}
+
+//Specifying the operator
+//Defaults to or. The below makes both terms required.
+
+GET /products/_search
+{
+  "query": {
+    "match": {
+      "name": {
+        "query": "pasta chicken",
+        "operator": "and"
+      }
+    }
+  }
+}
+
+//Searching multiple fields
+//Basic usage
+
+GET /products/_search
+{
+  "query": {
+    "multi_match": {
+      "query": "Beets",
+      "fields": ["name", "tags"]
+    }
+  }
+}
+
+//Per-field relevance boosting
+GET /products/_search
+{
+  "query": {
+    "multi_match": {
+      "query": "Beets",
+      "fields": ["name^2", "tags"]
+    }
+  }
+}
+
+//Specifying a tie breaker
+GET /products/_search
+{
+  "query": {
+    "multi_match": {
+      "query": "vegetable broth",
+      "fields": ["name", "description"]
+      //"tie_breaker": 0.3
+    }
+  }
+}
+
+
+//full text query -- match
+//search description page
+GET /products/_search
+{
+  "query": {
+    "match": {
+      //"description": "browse"
+      "name":"mango"
+    }
+  }
+}
+
+//phrase queries
+// no values returned since order is not present in db only 
+// juice - mango is present in db
+GET /products/_search
+{
+  "query" :{
+    "match_phrase": {
+      "name": "mango juice"
+    }
+  }
+}
+
+// eventhough result has Juice - Mango -- analyzer has removed the - and returns the result
+GET /products/_search
+{
+  "query" :{
+    "match_phrase": {
+      "name": "juice mango"
+    }
+  }
+}
+
+//Juice (mango) - > Juice - Mango
+GET /products/_search
+{
+  "query" :{
+    "match_phrase": {
+      "name": "Juice (mango)"
+    }
+  }
+}
+
+// search the description
+GET /products/_search
+{
+  "query" :{
+    "match_phrase": {
+      "description": "browse the internet"
+    }
+  }
+}
+
+//Querying with boolean logic
+//must -- Query clauses added within the must occurrence type are required to match.
+GET /products/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "term": {
+            "tags": "Alcohol"
+          }
+        }
+      ]
+    }
+  }
+}
+
+//must_not -- Query clauses added within the must_not occurrence type are required to not match.
+GET /products/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "term": {
+            "tags": "Alcohol"
+          }
+        }
+      ],
+      "must_not": [
+        {
+          "term": {
+            "tags": "Wine"
+          }
+        }
+      ]
+    }
+  }
+}
+
+// should -- Matching query clauses within the should occurrence type boost a matching document's relevance score.
+GET /products/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "term": {
+            "tags": "Alcohol"
+          }
+        }
+      ],
+      "must_not": [
+        {
+          "term": {
+            "tags": "Wine"
+          }
+        }
+      ],
+      "should": [
+        {
+          "term": {
+            "tags": "Beer"
+          }
+        }
+      ]
+    }
+  }
+}
+
+// An example with a few more adding more should query clauses:
+GET /products/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "term": {
+            "tags": "Alcohol"
+          }
+        }
+      ],
+      "must_not": [
+        {
+          "term": {
+            "tags": "Wine"
+          }
+        }
+      ],
+      "should": [
+        {
+          "term": {
+            "tags": "Beer"
+          }
+        },
+        {
+          "match": {
+            "name": "beer"
+          }
+        },
+        {
+          "match": {
+            "description": "beer"
+          }
+        }
+      ]
+    }
+  }
+}
+
+//filter
+//Query clauses defined within the filter occurrence type must match. This is similar to the must occurrence type. The difference is that filter query clauses do not affect relevance scores and may be cached.
+GET /products/_search
+{
+  "query": {
+    "bool": {
+      "filter": [
+        {
+          "term": {
+            "tags": "Alcohol"
+          }
+        }
+      ]
+    }
+  }
+}
+//match queries are actually translated into bool queries under the hood.
+
+//match query
+GET /products/_search
+{
+  "query":
+  {
+    "match":{
+      "name":"PASTA"
+    }
+  }
+}
+
+//bool query
+GET /products/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "term": {
+            "name": "pasta"
+          }
+        }
+      ]
+    }
+  }
+}
+
+//Examples
+//Example 1--find products that have 100 or less items in stock. On top of that, they should be tagged with “Beer” or contain “Beer” within their names.
+//variation 1 -- the first version requires anyone reading it to know that at least one of the should clauses are implicitly required.
+GET /products/_search
+{
+  "query": {
+    "bool": {
+      "filter": [
+        {
+          "range": {
+            "in_stock": {
+              "lte": 100
+            }
+          }
+        }
+      ],
+      "must": [
+        {
+          "bool": {
+            "should": [
+              { "term": { "tags": "Beer" } },
+              { "match": { "name": "Beer" } }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}
+
+//variation 2 --the second approach is easier to understand. It’s also more explicit
+GET /products/_search
+{
+  "query": {
+    "bool": {
+      "filter": [
+        {
+          "range": {
+            "in_stock": {
+              "lte": 100
+            }
+          }
+        }
+      ],
+      "should": [
+        { "term": { "tags": "Beer" } },
+        { "match": { "name": "Beer" } }
+      ],
+      "minimum_should_match": 1
+    }
+  }
+}
+
+// Example 2: should match products with the “Beer” tag that have 100 or less items in stock. On top of that, “Beer” should appear within the product name or description.
+
+// Variation #1
+GET /products/_search
+{
+  "query": {
+    "bool": {
+      "filter": [
+        {
+          "range": {
+            "in_stock": {
+              "lte": 100
+            }
+          }
+        },
+        {
+          "term": {
+            "tags": "Beer"
+          }
+        }
+      ],
+      "should": [
+        { "match": { "name": "Beer" } },
+        { "match": { "description": "Beer" } }
+      ],
+      "minimum_should_match": 1
+    }
+  }
+}
+
+//variation 2
+GET /products/_search
+{
+  "query": {
+    "bool": {
+      "filter": [
+        {
+          "range": {
+            "in_stock": {
+              "lte": 100
+            }
+          }
+        },
+        {
+          "term": {
+            "tags": "Beer"
+          }
+        }
+      ],
+      "must": [
+        {
+          "multi_match": {
+            "query": "Beer",
+            "fields": ["name", "description"]
+          }
+        }
+      ]
+    }
+  }
+}
+
+//Boosting Query
+//Matching juice products
+
+GET /products/_search
+{
+  "size": 20,
+  "query": {
+    "match": {
+      "name": "juice"
+    }
+  }
+}
+
+//Match juice products, but deprioritize apple juice
+// negative_boost - This parameter defines a floating point number between 0 and 
+//  1.0. This number is used as a modifier for documents that match the negative query clause.
+// In this example we searched for juice products and decreased the relevance of apple juice.
+GET /products/_search
+{
+  "size": 20,
+  "query": {
+    "boosting": {
+      "positive": {
+        "match": {
+          "name": "juice"
+        }
+      },
+      "negative": {
+        "match": {
+          "name": "apple"
+        }
+      },
+      "negative_boost": 0.5
+    }
+  }
+}
+
+//
+//Without filtering (deprioritize everything apples)
+
+GET /products/_search
+{
+  "query": {
+    "boosting": {
+      "positive": {
+        "match_all": {}
+      },
+      "negative": {
+        "match": {
+          "name": "apple"
+        }
+      },
+      "negative_boost": 0.5
+    }
+  }
+}
+
+// More Examples
+//Example 1 - "I like pasta"
+//Boost the relevance scores for pasta products.
+GET /recipes/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        { "match_all": {} }
+      ], 
+      "should": [
+        {
+          "term": {
+            "ingredients.name.keyword": "Pasta"
+          }
+        }
+      ]
+    }
+  }
+}
+
+//Example 2 -- "I don't like bacon"
+//Reduce the relevance scores for bacon products.
+
+GET /recipes/_search
+{
+  "query": {
+    "boosting": {
+      "positive": {
+        "match_all": {}
+      },
+      "negative": {
+        "term": {
+          "ingredients.name.keyword": "Bacon"
+        }
+      },
+      "negative_boost": 0.5
+    }
+  }
+}
+
+//Example 3 -- Pasta products, preferably without bacon
+GET /recipes/_search
+{
+  "query": {
+    "boosting": {
+      "positive": {
+        "term": {
+          "ingredients.name.keyword": "Pasta"
+        }
+      },
+      "negative": {
+        "term": {
+          "ingredients.name.keyword": "Bacon"
+        }
+      },
+      "negative_boost": 0.5
+    }
+  }
+}
+
+//Example 4 -- "I like pasta, but not bacon"
+GET /recipes/_search
+{
+  "query": {
+    "boosting": {
+      "positive": {
+        "bool": {
+          "must": [
+            { "match_all": {} }
+          ],
+          "should": [
+            {
+              "term": {
+                "ingredients.name.keyword": "Pasta"
+              }
+            }
+          ]
+        }
+      },
+      "negative": {
+        "term": {
+          "ingredients.name.keyword": "Bacon"
+        }
+      },
+      "negative_boost": 0.5
+    }
+  }
+}
+
+
+//Disjunction max (dis_max)
+//Basic usage
+
+GET /products/_search
+{
+  "query": {
+    "dis_max": {
+      "queries": [
+        { "match": { "name": "vegetable" } },
+        { "match": { "tags": "vegetable" } }
+      ]
+    }
+  }
+}
+
+//Specifying a tie breaker
+GET /products/_search
+{
+  "query": {
+    "dis_max": {
+      "queries": [
+        { "match": { "name": "vegetable" } },
+        { "match": { "tags": "vegetable" } }
+      ],
+      "tie_breaker": 0.3
+    }
+  }
+}
+
+
+

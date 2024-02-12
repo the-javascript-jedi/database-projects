@@ -1,0 +1,604 @@
+//creating indexes
+PUT /products
+{
+  "settings": {
+    "number_of_shards": 2,
+    "number_of_replicas": 2
+  }
+}
+
+//deleting indexes
+DELETE /pages
+
+// inserting documents
+POST /products/_doc
+{
+  "name":"Coffee Maker",
+  "price":64,
+  "in_stock":10
+}
+
+PUT /products/_doc/100
+{
+  "name":"Toaster",
+  "price":49,
+  "in_stock":4
+}
+
+//retreiving documents
+GET /products/_doc/100
+
+//update  documents -- existing field
+POST /products/_update/100
+{
+  "doc":{
+    "in_stock":3
+  }
+}
+
+//update documents -- add a new field
+POST /products/_update/100
+{
+  "doc":{
+    "tags":["electronics"]
+  }
+}
+
+//scripting elastic api
+POST /products/_update/100
+{
+  "script": {
+    // reduce the value od in_stock field by 1
+    "source":"ctx._source.in_stock--"
+  }
+}
+
+//scripting elastic api -- assigning values
+POST /products/_update/100
+{
+  "script": {
+    "source":"ctx._source.in_stock=100"
+  }
+}
+
+//scripting elastic api -- params
+POST /products/_update/100
+{
+  "script": {
+    "source":"ctx._source.in_stock-=params.quantity",
+    "params": {
+      "quantity":4
+    }
+  }
+}
+
+//upsert
+POST /products/_update/101
+{
+  "script":{
+    "source":"ctx._source.in_stock++"
+  },
+  "upsert":{
+    "name":"Blender",
+    "price":399,
+    "in_stock":5
+  }
+}
+
+//replacing
+PUT /products/_doc/101
+{
+  "name":"Toaster",
+  "price":79,
+  "in_stock":4
+}
+
+//retreiving documents
+GET /products/_doc/100
+GET /products_new
+//deleting documents
+DELETE /products/_doc/101
+
+//update by query
+POST /products/_update_by_query
+{
+  "script": {
+    "source": "ctx._source.in_stock--"
+  },
+  "query": {
+    "match_all":{}
+  }
+}
+
+//get all docs
+GET /products-new/_search
+{
+  "query":{
+    "match_all": {}
+  
+  }
+}
+
+//delete by query
+POST /productsn/_delete_by_query
+{
+  "query":{
+    "match_all":{
+      
+    }
+  }
+}
+
+//index will not fail if document already exists, it will be replaced
+//create will fail if document already exists
+POST /_bulk
+{"index":{"_index":"products","_id":200}}
+{"name":"Espresso Machine","price":199,"in_stock":5}
+{"create":{"_index":"products","_id":201}}
+{"name":"Milk Frother","price":149,"in_stock":14}
+
+
+//update doc with id 201 and delete the document with id 200 using batch processing
+POST /products/_bulk
+{"update":{"_id":201}}
+{"doc":{"price":129}}
+{"delete":{"_id":200}}
+
+//
+GET /products/_search
+{
+  "query":{
+    "match_all": {}
+  
+  }
+}
+
+
+//////////////////////////////////////////////////////////
+//Section 4
+/*/////////////////////////////////////////////////////*/
+POST /_analyze
+{
+  "text":"2 guys walk into a bar, but the third... Ducks! :-)",
+  "analyzer":"standard"
+}
+
+
+POST /_analyze
+{
+  "text":"2 guys walk into a bar, but the third... Ducks! :-)",
+  "char_filter":[],
+  "tokenizer":"standard",
+  "filter":["lowercase"]
+}
+
+//Adding explicit mappings
+PUT /reviews
+{
+  "mappings":{
+    "properties":{
+      "rating":{"type":"float"},
+      "content":{"type":"text"},
+      "product_id":{"type":"integer"},
+      "author":{
+        "properties":{
+          "first_name":{"type":"text"},
+          "last_name":{"type":"text"},
+          "email":{"type":"keyword"}
+        }
+      }
+    }
+  }
+}
+
+//Create Document using the mapping
+PUT /reviews/_doc/1
+{
+  "rating":5.0,
+  "content":"Outstanding course",
+  "product_id":123,
+  "author":{
+    "first_name":"John",
+    "last_name":"Doe",
+    "email":"johndoe123@example.com"
+  }
+}
+
+// retrieve mappings for entire index
+GET /reviews/_mapping
+
+// retrieve mappings for entire index
+GET /reviews/_mapping/field/content
+
+
+GET /reviews/_mapping/field/author.email
+
+PUT /reviews/_mapping
+{
+  "properties":{
+    "created_at":{
+      "type":"date"
+    }
+  }
+}
+//string date
+PUT /reviews/_doc/2
+{
+  "rating":4.5,
+  "content":"Not Bad",
+  "product_id":123,
+  "created_at":"2015-03-27",
+  "author":{
+    "first_name":"Average",
+    "last_name":"Joe",
+    "email":"avgjoe@example.com"
+  }
+}
+//utc time 
+PUT /reviews/_doc/3
+{
+  "rating":3.5,
+  "content":"Could be better",
+  "product_id":123,
+  "created_at":"2015-04-15T19:29:32Z",
+  "author":{
+    "first_name":"Spencer",
+    "last_name":"Pearson",
+    "email":"spearson@example.com"
+  }
+}
+
+//utc time --with 1 hour offset 
+PUT /reviews/_doc/4
+{
+  "rating":5.0,
+  "content":"Incredible",
+  "product_id":123,
+  "created_at":"2015-01-28T19:30:03+01:00",
+  "author":{
+    "first_name":"Adam",
+    "last_name":"Jones",
+    "email":"adam.jones@example.com"
+  }
+}
+
+//timestamp in milliseconds --
+PUT /reviews/_doc/5
+{
+  "rating":4.5,
+  "content":"Very Useful",
+  "product_id":123,
+  "created_at":"1705692828",
+  "author":{
+    "first_name":"Taylor",
+    "last_name":"West",
+    "email":"twest@example.com"
+  }
+}
+
+//Get reviews
+GET /reviews/_search
+{
+  "query":{
+    "match_all": {}
+  }
+}
+
+//this mapping update will not work and cause error, as field mapping cannot be updated
+PUT /reviews/_mapping
+{
+  "properties":{
+    "product_id":{
+      "type":"keyword"
+    }
+  }
+}
+//we will add the ignore mapping so that parameter abover certaib values will be ignored
+PUT /reviews/_mapping
+{
+  "properties":
+  {
+    "author":{
+      "properties":{
+        "email":{
+          "type":"keyword",
+          "ignore_above":256
+        }
+      }
+    }
+  }
+}
+
+////////////////////////////////////////////////
+// reindexing the documents
+GET /reviews/_mappings
+
+//copy the mappings into a newly created reviews and change the the product_id mapping value type from integer to keyword
+PUT /reviews_new
+{
+  "mappings": {
+      "properties": {
+        "author": {
+          "properties": {
+            "email": {
+              "type": "keyword",
+              "ignore_above": 256
+            },
+            "first_name": {
+              "type": "text"
+            },
+            "last_name": {
+              "type": "text"
+            }
+          }
+        },
+        "content": {
+          "type": "text"
+        },
+        "created_at": {
+          "type": "date"
+        },
+        "product_id": {
+          "type": "integer"
+        },
+        "rating": {
+          "type": "float"
+        }
+      }
+    }
+}
+
+//use the reindex query and transfer the source to destination
+POST /_reindex
+{
+  "source":{
+    "index":"reviews"
+  },
+  "dest":{
+    "index":"reviews_new"
+  }
+}
+
+//check the input
+GET /reviews_new/_search
+{
+  "query":{
+    "match_all":{}
+  }
+}
+//delete the index data inside the reviews_new index
+POST /reviews_new/_delete_by_query
+{
+  "query":{
+   "match_all":{}
+  }
+}
+
+//modifying the data type product_id from integer to string
+POST /_reindex
+{
+  "source":{
+    "index":"reviews"
+  },
+  "dest":{
+    "index":"reviews_new"
+  },
+  "script": {
+    "source":"""
+      if(ctx._source.product_id!=null){
+        ctx._source.product_id=ctx._source.product_id.toString()
+      }
+    """
+  }
+}
+
+// Section 4  - 55 ) Multi Field Mappings
+PUT /multi_field_test
+{
+  "mappings":{
+    "properties":{
+      "description":{
+        "type":"text"
+      },
+      "ingredients":{
+        "type":"text",
+        "fields":{
+          "keyword":{
+            "type":"keyword"
+          }
+        }
+      }
+    }
+  }
+}
+
+POST /multi_field_test/_doc
+{
+  "description":"TO make this spaghetti carbonara, you first need to",
+  "ingredients":["Spaghetti","Bacon","Eggs"]
+}
+
+// searching same field with multiple mappings
+GET /multi_field_test/_search
+{
+  "query":{
+    "match_all": {}
+  }
+}
+
+// match query
+GET /multi_field_test/_search
+{
+  "query":{
+    "match": {
+      "ingredients":"Spaghetti"
+    }
+  }
+}
+
+// term level  query - using keyword mapping
+GET /multi_field_test/_search
+{
+  "query":{
+    "match": {
+      "ingredients.keyword":"Spaghetti"
+    }
+  }
+}
+
+// 56) Index Templates
+PUT /_template/access-logs
+{
+  "index_patterns": ["access-logs-*"],
+  "settings":{
+    "number_of_shards": 2,
+    "index.mapping.coerce":false
+  },
+  "mappings":{
+    "properties":{
+      "@timestamp":{
+        "type":"date"
+      },
+      "url.original":{
+        "type":"keyword"
+      },
+      "http.request.referrer":{
+        "type":"keyword"
+      },
+       "http.response.status_code":{
+        "type":"long"
+      }
+    }
+  }
+}
+
+PUT /access-logs-2020-01-01
+
+GET /access-logs-2020-01-01
+
+GET /products/_mapping
+
+//create a explicit mapping for the people index
+PUT /people
+{
+  "mappings":{
+    "properties":{
+      "first_name":{
+        "type":"text"
+      }
+    }
+  }
+}
+
+//Insert a value to the people index 
+/* the first_name value is mapped 
+ the last_name value is dynamically mapped as wehave not created it originally */
+POST /people/_doc
+{
+  "first_name":"Bo",
+  "last_name": "Anderson"
+}
+
+//Display the mapping
+GET /people/_mapping
+
+// Clean up
+DELETE /people
+
+///////////////////////////////////////
+//create a mapping for the people index with dynamic set to false
+PUT /people
+{
+  "mappings":{
+    "dynamic":false,
+    "properties":{
+      "first_name":{
+        "type":"text"
+      }
+    }
+  }
+}
+
+//Insert a value to the people index 
+/* the first_name value is mapped 
+ the last_name value is not mapped as wehave not created it originally, it will be available in _source to display but will not be queryable */
+POST /people/_doc
+{
+  "first_name":"Bo",
+  "last_name": "Anderson"
+}
+
+//Display the mapping
+GET /people/_mapping
+
+//simple search query search first name
+GET /people/_search
+{
+  "query":{
+    "match":{
+      "first_name":"Bo"
+    }
+  }
+}
+
+//simple search query search last name
+GET /people/_search
+{
+  "query":{
+    "match":{
+      "last_name":"Anderson"
+    }
+  }
+}
+// Clean up
+DELETE /people
+
+///////////////////////////////////////////////////
+// strict mapping
+PUT /people
+{
+  "mappings":{
+    "dynamic":"strict",
+    "properties":{
+      "first_name":{
+        "type":"text"
+      }
+    }
+  }
+}
+
+// this insert will throw an error as last_name is not specified in strict creation
+POST /people/_doc
+{
+  "first_name":"Bo",
+  "last_name": "Anderson"
+}
+
+
+
+//61 Dynamic Templates
+//we specify a dynamic template where integer is matched to mapping type log
+PUT /dynamic_template_test
+{
+  "mappings": {
+    "dynamic_templates":[
+      {
+        "integers":{
+          "match_mapping_type":"long",
+          "mapping":{
+            "type":"integer"
+          }
+        }
+      }
+     ]
+  }
+}
+//insert an integer value
+POST /dynamic_template_test/_doc
+{
+  "in_stock":123
+}
+//DISPLAY THE VALUE
+GET /dynamic_template_test/_mapping
+
+

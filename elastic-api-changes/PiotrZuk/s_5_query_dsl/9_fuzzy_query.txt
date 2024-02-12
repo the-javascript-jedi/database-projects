@@ -1,0 +1,115 @@
+#fuzzy query
+#search field agent query with typo
+#fuzziness=0 will behave exactly like term query
+#maximum accepted value of fuzziness is 2
+GET mylogs-apache-v1-*/_search
+{
+  "query": {
+    "fuzzy": {
+      "agent": {
+        "value": "mazilla",
+        "fuzziness": 1
+      }
+    }
+  }
+}
+
+#create a sample index with new values
+POST sample-index-v1/_doc?refresh=true
+{
+  "agent" : "Mozilla"
+}
+POST sample-index-v1/_doc?refresh=true
+{
+  "agent" : "Mozillaz"
+}
+POST sample-index-v1/_doc?refresh=true
+{
+  "agent" : "Mazilla"
+}
+POST sample-index-v1/_doc?refresh=true
+{
+  "agent" : "Mayalla"
+}
+POST sample-index-v1/_doc?refresh=true
+{
+  "agent" : "Mzoilla"
+}
+POST sample-index-v1/_doc?refresh=true
+{
+  "agent" : "Moilla"
+}
+POST sample-index-v1/_doc?refresh=true
+{
+  "agent" : "Firefox"
+}
+# display sample index 
+GET sample-index-v1/_search
+
+GET sample-index-v1/_search
+{
+  "query": {
+    "fuzzy": {
+      "agent": {
+        "value": "mozillazzz",
+        "fuzziness": 2
+      }
+    }
+  }
+}
+
+GET sample-index-v1/_search
+{
+  "query": {
+    "fuzzy": {
+      "agent": {
+        "value": "mozilla",
+        "fuzziness": 1
+      }
+    }
+  }
+}
+
+#prefix length
+GET sample-index-v1/_search
+{
+  "query": {
+    "fuzzy": {
+      "agent": {
+        "value": "mozilla",
+        "fuzziness": 2,
+        "transpositions":false,
+        "prefix_length": 2
+      }
+    }
+  }
+}
+
+GET sample-index-v1/_search
+{
+  "query": {
+    "fuzzy": {
+      "agent": {
+        "value": "mozilla",
+        "fuzziness": 1,
+        "prefix_length": 0,
+        "max_expansions": 50,
+        "transpositions": false
+      }
+    }
+  }
+}
+
+GET sample-index-v1/_search
+{
+  "query": {
+    "fuzzy": {
+      "agent": {
+        "value": "firefox",
+        "fuzziness": 50
+      }
+    }
+  }
+}
+#delete sample index
+DELETE sample-index-v1

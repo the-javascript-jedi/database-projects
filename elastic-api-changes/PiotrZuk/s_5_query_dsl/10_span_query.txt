@@ -1,0 +1,148 @@
+# span query
+#insert below document to index
+POST test-documents-v1/_doc
+{
+"title" : "Market condition in USA",
+"content" : "Current condition of the Market in USA is lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse fermentum nec lacus nec hendrerit. Pellentesque tristique mattis sagittis. Vestibulum nec vestibulum odio. Integer eu diam urna. Mauris condimentum sapien magna, ac vehicula orci vulputate eget. Sed aliquam sem ut ultricies volutpat. Nullam metus lectus, consequat eget suscipit quis, suscipit sed felis. Sed id turpis dictum erat pretium lobortis. Duis id nisi id nisl imperdiet convallis. Donec dignissim, lorem vel facilisis commodo, risus ligula euismod tellus, vitae porttitor justo odio vel turpis. Donec molestie vitae dolor sit amet imperdiet. Import of goods from China impact the domestic id sapien convallis, aliquam risus ac, aliquet dolor. Suspendisse dolor arcu, viverra eget erat eget, elementum dignissim dolor. Proin cursus bibendum diam sit amet vulputate. Mauris malesuada maximus lorem, sit amet cursus quam faucibus non. Fusce malesuada magna ac erat blandit, quis cursus nibh eleifend. Suspendisse malesuada quis nisl eget aliquam. Morbi felis elit, dignissim non pharetra in, volutpat a enim. Cras tempus leo in metus placerat, eget egestas ante sagittis. Proin pretium diam sed nisi tincidunt, sed tincidunt ligula dictum. Etiam auctor fermentum est eu luctus. Phasellus tincidunt erat non enim imperdiet mattis."
+}
+#get the document from index - usa
+POST test-documents-v1/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {
+            "content": {
+              "query": "Market condition USA"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+#get the document from index - china
+POST test-documents-v1/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {
+            "content": {
+              "query": "Market condition China"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+
+#span query
+# sloop parameter specifies the maximum number of different terms between terms that we are searching for. In our case, I specify that I accept no more than 12 terms between condition and market. and between market and USA.
+#"in_order": true - specifies that the terms searched should come in order
+POST test-documents-v1/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "span_near": {
+            "clauses": [
+              {
+                "span_term": {
+                  "content": {
+                    "value": "condition"
+                  }
+                }
+              },
+              {
+                "span_term": {
+                  "content": {
+                    "value": "market"
+                  }
+                }
+              },
+              {
+                "span_term": {
+                  "content": {
+                    "value": "usa"
+                  }
+                }
+              }
+            ],
+            "slop": 12,
+            "in_order": true
+          }
+        }
+      ]
+    }
+  }
+}
+
+
+# all the documents that have search terms like China, condition, and market closer each other will be scored higher.
+POST test-documents-v1/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "term": {
+            "content": {
+              "value": "china"
+            }
+          }
+        },
+        {
+          "term": {
+            "content": {
+              "value": "condition"
+            }
+          }
+        },
+        {
+          "term": {
+            "content": {
+              "value": "market"
+            }
+          }
+        }
+      ], 
+      "should": [
+        {
+          "span_near": {
+            "clauses": [
+              {
+                "span_term": {
+                  "content": {
+                    "value": "china"
+                  }
+                }
+              },
+              {
+                "span_term": {
+                  "content": {
+                    "value": "condition"
+                  }
+                }
+              },
+              {
+                "span_term": {
+                  "content": {
+                    "value": "market"
+                  }
+                }
+              }
+            ],
+            "slop": 200,
+            "in_order": false
+          }
+        }
+      ],
+      "minimum_should_match": 0
+    }
+  }
+}

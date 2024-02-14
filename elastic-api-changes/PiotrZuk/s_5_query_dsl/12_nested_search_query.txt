@@ -1,0 +1,173 @@
+# create index sample-book-v1
+POST /sample-book-v1/_doc
+{
+  "title": "The great Elasticsearch",
+  "publisher" : {
+    "name" : "Manning Publications",
+    "date" : "2022"
+  },
+  "author": [
+    {
+      "firstname": "Mike",
+      "lastname": "Thomson"
+    },
+    {
+      "firstname": "Joe",
+      "lastname": "Black",
+      "biography": "An American author of over 100 technical books"
+    }
+  ]
+}
+#search first name and last name in nested object
+# searching for firstname of mike and lastname of black returns wrong result
+POST /sample-book-v1/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "term": {
+            "author.firstname": {
+              "value": "mike"
+            }
+          }
+        },
+        {
+          "term": {
+            "author.lastname": {
+              "value": "black"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+#check the mapping of the index
+GET /sample-book-v1/_mapping
+
+# copy the mappings from index and paste to new index
+# create an index with only the type object field
+# remove the fields mappings
+# add author as type nested
+PUT /sample-book-v2/
+{
+  "mappings": {
+    "properties": {
+      "author": {
+        "type": "nested",
+        "properties": {
+          "firstname": {
+            "type": "text"
+          },
+          "lastname": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256
+              }
+            }
+          },
+          "biography": {
+            "type": "text"
+          }
+        }
+      },
+      "publisher": {
+        "properties": {
+          "date": {
+            "type": "text"
+          },
+          "name": {
+            "type": "text"
+          }
+        }
+      },
+      "title": {
+        "type": "text"
+      }
+    }
+  }
+}
+# reindex the documents 
+POST /_reindex?wait_for_completion=true
+{
+  "conflicts" : "proceed",
+  "source": {
+    "index": "sample-book-v1"
+  },
+  "dest": {
+    "index": "sample-book-v2"
+  }
+}
+
+POST /sample-book-v2/_search
+{
+  "query": {
+    "nested": {
+      "path": "author",
+      "query": {
+        "bool": {
+          "must": [
+            {
+              "term": {
+                "author.firstname": {
+                  "value": "mike"
+                }
+              }
+            },
+            {
+              "term": {
+                "author.lastname": {
+                  "value": "thomson"
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}
+#apply sort to the nested object
+#specify the "nested" keyword
+POST /sample-book-v2/_search
+{
+  "query": {
+    "nested": {
+      "path": "author",
+      "query": {
+        "bool": {
+          "must": [
+            {
+              "term": {
+                "author.firstname": {
+                  "value": "joe"
+                }
+              }
+            },
+            {
+              "term": {
+                "author.lastname": {
+                  "value": "black"
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "sort": [
+    {
+      "author.lastname.keyword": {
+             "order" : "asc",
+             "nested": {
+                "path": "author"
+             }
+          }
+    }
+  ]
+}
+
